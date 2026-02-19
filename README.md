@@ -1,0 +1,237 @@
+# Client Ask Formatter (CAF)
+
+Client Ask Formatter (CAF) converts raw client demand input (transcript or requirement notes) into a structured artifact bundle using an LLM pipeline.
+
+Generated artifacts:
+- `REQUIREMENTS.md`
+- `SOW_draft.md`
+- `TECH_SPEC.md`
+- `ESTIMATES.md`
+- `POC_AGENT.md`
+
+## Project Journey
+
+This project was built in 3 stages:
+
+1. Idea validation
+- Goal: reduce the time from discovery call to delivery-ready documentation.
+- Hypothesis: a staged AI pipeline can produce high-quality presales/delivery artifacts from unstructured input.
+
+2. Python prototype (MVP)
+- Implemented in `python-prototype-streamlit/`.
+- Purpose: validate workflow and artifact quality quickly with minimal setup.
+- Outcome: confirmed end-user value and prompt-chain viability.
+
+3. Production-oriented JS app
+- Rebuilt in Next.js for stronger app architecture, cleaner API boundaries, and better product UX.
+- Added provider/model controls, strict server-side validation, structured pipeline modules, and richer download UX (`.md`/`.pdf`).
+
+## Why JS/Next.js for the main app
+
+- Better full-stack packaging: UI + API routes in one codebase.
+- Cleaner deployment path (Vercel-ready App Router architecture).
+- Stronger maintainability for frontend-heavy product evolution.
+- Easier incremental UX improvements (results views, export controls, routing).
+- Typed contracts across client/server with TypeScript.
+
+Python prototype remains useful to demonstrate rapid iteration and architecture evolution.
+
+## Tech Stack
+
+Primary app (`/`):
+- Next.js 14 (App Router)
+- React 18 + TypeScript
+- Tailwind CSS
+- LLM SDKs:
+  - `@anthropic-ai/sdk`
+  - `openai`
+  - `@google/generative-ai`
+- Export tooling:
+  - `jszip` (bundle downloads)
+  - `jspdf` (PDF export)
+
+Prototype (`python-prototype-streamlit/`):
+- Streamlit
+- Anthropic/OpenAI/Google Python SDKs
+
+## Key Architecture Decisions
+
+1. Multi-step pipeline (not one giant prompt)
+- Sequence: `requirements -> sow -> tech spec -> estimates -> poc agent`
+- Why: improves coherence, makes dependencies explicit, and simplifies debugging/retries.
+
+2. Provider abstraction layer
+- Core logic calls a unified `callLLM` interface.
+- Why: avoids vendor lock-in and supports provider/model experimentation.
+
+3. Provider/model selection with server allowlist
+- UI lets users select provider/model.
+- Server validates allowed combinations before generation.
+- Why: flexibility for users without sacrificing runtime safety.
+
+4. Markdown-first artifacts + optional PDF export
+- Markdown stays editable for technical teams.
+- PDF supports stakeholder sharing.
+
+5. Database-less MVP
+- Artifacts are returned directly and stored in browser `localStorage`.
+- Why: faster MVP delivery and lower complexity.
+- Tradeoff: no durable history yet.
+
+## Why these files exist (high-level file map)
+
+- `app/api/generate/route.ts`
+  - Main generation endpoint: validation, context build, model resolution, pipeline execution.
+- `lib/parser.ts`
+  - Normalizes pasted/uploaded input into clean context.
+- `lib/pipeline.ts`
+  - Orchestrates sequential artifact generation.
+- `lib/prompts/*.ts`
+  - One prompt builder per artifact type.
+- `lib/llm/index.ts`
+  - Provider/model resolution and unified LLM call routing.
+- `lib/llm/catalog.ts`
+  - Canonical provider/model allowlist for UI + server validation.
+- `components/InputForm.tsx`
+  - Input workflow including provider/model selectors.
+- `components/ArtifactCard.tsx`, `components/ArtifactBundle.tsx`
+  - Compact results UI + download controls.
+- `lib/exporters.ts`
+  - Markdown/PDF export and zip bundling utilities.
+- `app/results/page.tsx`
+  - Results screen and persisted output rendering.
+- `python-prototype-streamlit/app.py`
+  - Initial Python MVP implementation for workflow validation.
+
+## Getting Started (JS app)
+
+Prerequisites:
+- Node.js 18+ (Node 20+ recommended)
+- npm 9+
+
+1. Install dependencies
+```bash
+npm install
+```
+
+2. Configure environment
+```bash
+cp .env.example .env.local
+```
+
+`.env.local`:
+```env
+LLM_PROVIDER=anthropic
+
+ANTHROPIC_API_KEY=
+OPENAI_API_KEY=
+GOOGLE_GENERATIVE_AI_API_KEY=
+```
+
+3. Run
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
+
+## Usage Flow
+
+1. Open `/`
+2. Paste transcript text or upload `.txt` / `.md`
+3. Fill metadata and priority
+4. Select provider + model
+5. Click `Generate`
+6. Review outputs on `/results`
+7. Download per-file (`.md`/`.pdf`) or bundle zip
+
+## API Contract
+
+`POST /api/generate` (`multipart/form-data`):
+- `rawText`
+- `file` (optional `.txt`/`.md`)
+- `existingProduct` (optional)
+- `productDescription` (optional)
+- `clientName` (optional)
+- `priority` (`mvp` | `poc` | `full`)
+- `provider` (`anthropic` | `openai` | `google`)
+- `model` (must be valid for selected provider)
+
+Success response:
+```json
+{
+  "status": "ok",
+  "metadata": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-4-6"
+  },
+  "artifacts": {
+    "sow": "...",
+    "techSpec": "...",
+    "estimates": "...",
+    "pocAgent": "...",
+    "requirements": "..."
+  }
+}
+```
+
+## Commands
+
+JS app:
+```bash
+npm run dev
+npm run build
+npm run start
+npm run lint
+```
+
+Python prototype:
+```bash
+cd python-prototype-streamlit
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+If Python deps were previously installed and you hit compatibility issues:
+```bash
+pip install --upgrade --force-reinstall -r requirements.txt
+```
+
+## GitHub Upload Checklist
+
+Before pushing:
+- Ensure secrets are not committed (`.env.local`, prototype `.env`).
+- Do not commit local build artifacts (`.next/`, `node_modules/`, `.venv/`).
+- Confirm production checks pass:
+  - `npm run build`
+  - `npm run lint`
+
+## Publish to GitHub
+
+If this folder is not yet a git repo:
+```bash
+cd /Users/akshay/Workspace/client-ask-formatter
+git init
+git add .
+git commit -m "Initial commit: CAF JS app + Python prototype"
+```
+
+Create a GitHub repository (example with GitHub CLI):
+```bash
+gh repo create client-ask-formatter --public --source=. --remote=origin --push
+```
+
+If you create the repo from GitHub UI instead:
+```bash
+git branch -M main
+git remote add origin https://github.com/<your-username>/client-ask-formatter.git
+git push -u origin main
+```
+
+## Future Updates
+
+Priority roadmap:
+- Add automated tests (parser, prompts, API integration).
+- Add timeout/retry policy and provider-specific error taxonomy.
+- Add durable history persistence and observability.
+- Add audio ingestion and external tool integrations.

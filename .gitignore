@@ -1,0 +1,21 @@
+node_modules
+.next
+out
+dist
+coverage
+*.log
+.env*.local
+.DS_Store
+.pycache/
+__pycache__/
+*.pyc
+*.pyo
+
+# Python prototype local artifacts
+python-prototype-streamlit/.venv/
+python-prototype-streamlit/.env
+python-prototype-streamlit/__pycache__/
+python-prototype-streamlit/.pytest_cache/
+python-prototype-streamlit/.mypy_cache/
+python-prototype-streamlit/.ruff_cache/
+python-prototype-streamlit/.streamlit/
