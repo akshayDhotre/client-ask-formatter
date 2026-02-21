@@ -197,37 +197,6 @@ If Python deps were previously installed and you hit compatibility issues:
 pip install --upgrade --force-reinstall -r requirements.txt
 ```
 
-## GitHub Upload Checklist
-
-Before pushing:
-- Ensure secrets are not committed (`.env.local`, prototype `.env`).
-- Do not commit local build artifacts (`.next/`, `node_modules/`, `.venv/`).
-- Confirm production checks pass:
-  - `npm run build`
-  - `npm run lint`
-
-## Publish to GitHub
-
-If this folder is not yet a git repo:
-```bash
-cd /Users/akshay/Workspace/client-ask-formatter
-git init
-git add .
-git commit -m "Initial commit: CAF JS app + Python prototype"
-```
-
-Create a GitHub repository (example with GitHub CLI):
-```bash
-gh repo create client-ask-formatter --public --source=. --remote=origin --push
-```
-
-If you create the repo from GitHub UI instead:
-```bash
-git branch -M main
-git remote add origin https://github.com/<your-username>/client-ask-formatter.git
-git push -u origin main
-```
-
 ## Future Updates
 
 Priority roadmap:
