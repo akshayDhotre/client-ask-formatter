@@ -2,6 +2,33 @@
 
 Client Ask Formatter (CAF) converts raw client demand input (transcript or requirement notes) into a structured artifact bundle using an LLM pipeline.
 
+## Why this app is needed
+
+In presales and early delivery phases, teams repeatedly do the same high-effort translation work:
+- Convert unstructured client conversations into requirements
+- Turn requirements into scope and architecture documents
+- Estimate effort/cost with clear assumptions
+- Create implementation-ready handoff documents
+
+This process is usually manual, slow, and inconsistent across teams.
+CAF standardizes and accelerates that workflow by generating a coherent artifact set from one input source.
+
+### Business problems CAF addresses
+- Long turnaround from discovery call to proposal-ready documentation
+- Inconsistent document quality across contributors
+- Lost context between presales, architecture, and engineering handoff
+- Weak traceability of AI output when provider/model is unclear
+
+### Who benefits
+- Presales engineers and solution architects
+- Engineering managers and technical program managers
+- Delivery teams that need structured kickoff inputs quickly
+
+### Outcomes CAF targets
+- Faster proposal and scoping cycles
+- Better cross-functional alignment
+- Repeatable, auditable artifact generation with explicit provider/model metadata
+
 Generated artifacts:
 - `REQUIREMENTS.md`
 - `SOW_draft.md`
@@ -59,24 +86,36 @@ Prototype (`python-prototype-streamlit/`):
 1. Multi-step pipeline (not one giant prompt)
 - Sequence: `requirements -> sow -> tech spec -> estimates -> poc agent`
 - Why: improves coherence, makes dependencies explicit, and simplifies debugging/retries.
+- Product impact: documents read like a connected package instead of isolated outputs.
 
 2. Provider abstraction layer
 - Core logic calls a unified `callLLM` interface.
 - Why: avoids vendor lock-in and supports provider/model experimentation.
+- Product impact: easy to compare quality, latency, and cost across providers.
 
 3. Provider/model selection with server allowlist
 - UI lets users select provider/model.
 - Server validates allowed combinations before generation.
 - Why: flexibility for users without sacrificing runtime safety.
+- Product impact: transparent and controllable AI behavior for technical teams.
 
 4. Markdown-first artifacts + optional PDF export
 - Markdown stays editable for technical teams.
 - PDF supports stakeholder sharing.
+- Product impact: both engineering-friendly and client-friendly output channels.
 
 5. Database-less MVP
 - Artifacts are returned directly and stored in browser `localStorage`.
 - Why: faster MVP delivery and lower complexity.
 - Tradeoff: no durable history yet.
+
+## What makes CAF different from a simple prompt UI
+
+- Dependency-aware generation pipeline, not single-shot prompting
+- Typed API contract and structured artifact bundle
+- Runtime provider/model controls with server-side validation
+- Built-in artifact packaging (per-file and zip, markdown + pdf)
+- Evolution path demonstrated with both Python prototype and production JS architecture
 
 ## Why these files exist (high-level file map)
 
